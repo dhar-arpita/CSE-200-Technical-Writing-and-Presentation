@@ -1,0 +1,329 @@
+\documentclass[preprint,11pt]{elsarticle}
+\usepackage{graphicx}
+
+
+\usepackage{amsmath}  % For mathematical formatting
+\usepackage{amssymb} 
+\usepackage{microtype} % For better text formatting and hyphenation
+\usepackage{multicol}
+\setlength{\textwidth}{7in}
+\usepackage{array}
+\usepackage{fancyhdr}
+\usepackage{amsthm}
+\usepackage[a4paper, total={7in, 10in}]{geometry} 
+\usepackage[backend=biber,style=numeric]{biblatex}
+
+\usepackage{tcs}
+\addbibresource{ref.bib}
+
+\usepackage{mdframed} % For framed boxes
+
+\usepackage{hyperref} 
+
+
+
+\setlength{\oddsidemargin}{-0.5in}
+\setlength{\evensidemargin}{-0.5in}
+\setlength{\topmargin}{-0.5in}
+\setlength{\headheight}{0pt}
+\setlength{\headsep}{29pt}
+\setlength{\footskip}{5pt}
+\setlength{\parskip}{4pt} % Remove paragraph skips
+\setlength{\parindent}{0pt} % Remove paragraph indentation
+
+
+
+\usepackage{algorithm} % For algorithm environment
+\usepackage{algpseudocode} % For algorithmic pseudo-code
+\usepackage{caption} % For customizing captions
+
+% Remove the underline from the caption
+\DeclareCaptionFormat{nocaptionunderline}{#1#2#3}
+\captionsetup[algorithm]{format=nocaptionunderline}
+\usepackage{titlesec}
+\titleformat{\section}[block]{\bfseries\Large\MakeUppercase}{\thesection}{2em}{}
+\titleformat{\subsection}[block]{\bfseries\MakeUppercase}{\thesubsection}{2em}{}
+\titleformat{\subsubsection}[block]{\bfseries}{\thesubsubsection}{1em}{}
+
+% Increase the space before and after section titles
+\titlespacing*{\section}{0pt}{2ex plus 1ex minus .2ex}{2ex plus .2ex}
+\titlespacing*{\subsection}{0pt}{1.5ex plus .5ex minus .2ex}{1.5ex plus .5ex}
+\titlespacing*{\subsubsection}{0pt}{1.25ex plus .5ex minus .2ex}{1.25ex plus .5ex}
+
+\title{{\Large \textbf{Robust Linear Regression: Optimal Rates in Polynomial Time}}}
+
+\newcommand{\AuthorOne}{%
+     \textbf{Ainesh Bakshi} \\
+    \texttt{abakshi@cs.cmu.edu} \\
+    Carnegie Mellon University \\
+    Pittsburgh, USA
+}
+
+\newcommand{\AuthorTwo}{%
+     \textbf{Adarsh Prasad} \\
+    \texttt{adarshp@andrew.cmu.edu} \\
+    Carnegie Mellon University \\
+    Pittsburgh, USA
+}
+
+\newcommand{\DisplayAuthors}{%
+    \noindent
+    \begin{minipage}[t]{0.45\textwidth}
+        \centering
+        \AuthorOne
+    \end{minipage}
+    \hfill
+    \begin{minipage}[t]{0.45\textwidth}
+        \centering
+        \AuthorTwo
+    \end{minipage}
+}
+
+\makeatletter
+\renewcommand{\maketitle}{%
+  \begin{center}
+    {\LARGE \@title \par}  
+    \vskip 1em  
+    \DisplayAuthors  
+  \end{center}
+  \vskip 2em  
+}
+\makeatother
+
+\begin{document}
+
+\maketitle
+
+\section*{\textbf {\MakeUppercase{abstract}}}
+ \noindent
+We obtain robust and computationally efficient estimators for learning several linear models that achieve statistically optimal convergence rates under minimal distributional assumptions. Concretely, we assume our data is drawn from a $k$-hypercontractive distribution and an $\epsilon$-fraction is adversarially corrupted. We then describe an estimator that converges to the optimal least-squares minimizer for the true distribution at a rate proportional to $\epsilon^{2-2/k}$, when the noise is independent of the covariates. We note that no such estimator was known prior to our work, even with access to unbounded computation. The rate we achieve is information-theoretically optimal, and thus we resolve the main open question in Klivans, Kothari, and Meka [COLT'18].
+
+Our key insight is to identify an analytic condition that serves as a polynomial relaxation of independence of random variables. In particular, we show that when the moments of the noise and covariates are negatively correlated, we obtain the same rate as independent noise. Further, when the condition is not satisfied, we obtain a rate proportional to $\epsilon^{2-4/k}$, and again match the information-theoretic lower bound. Our central technical contribution is to algorithmically exploit independence of random variables in the "sum-of-squares" framework by formulating it as the aforementioned polynomial inequality.
+
+\section*{\textbf{\MakeUppercase{ccs concept}}}
+
+\noindent
+\textbf{• Theory of computation → Semidefinite programming; Convex optimization; • Mathematics of computing → Multivariate statistics.}
+
+\section*{\textbf{\MakeUppercase{keywords}}}
+
+\noindent
+robust linear regression, heavy-tailed distributions, sum-of-squares
+
+\par\vspace{0.5cm}
+\subsection*{\textbf{Acm Reference Format}}
+\noindent
+Ainesh Bakshi and Adarsh Prasad. 2021. Robust Linear Regression: Optimal Rates in Polynomial Time. In Proceedings of the 53rd Annual ACM SIGACT Symposium on Theory of Computing (STOC ’21), June 21–25, 2021, Virtual, Italy. ACM, New York, NY, USA, 14 pages.\href{https://doi.org/10.1145/3406325}{https://doi.org/10.1145/3406325}
+\par\vspace{1cm}
+
+\noindent\rule{\linewidth}{0.5pt}
+\pagebreak
+\begin{figure}[h]
+ 
+    \includegraphics[width=0.25\textwidth]{Screenshot (11).png}
+    \label{fig:example}
+\end{figure}
+
+This work is licensed under a Creative Commons Attribution International 4.0 License. \\
+ STOC ’21, June 21–25, 2021, Virtual, Italy \\
+ © 2021 Copyright held by the owner/author(s).\\
+ ACM ISBN 978-1-4503-8053-9/21/06.\\
+ \href{https://doi.org/10.1145/3406325}{https://doi.org/10.1145/3406325}
+
+
+\section{\textbf{\MakeUppercase{introduction}}}
+\noindent
+This paper addresses the problem of robust linear regression, which involves creating regression models that remain accurate even when some data is corrupted by adversarial outliers. Traditional regression methods fail under these conditions, making robust estimation a challenging task. The authors focus on a hypercontractive distribution framework, which includes distributions like Gaussian, allowing them to design robust estimators. Their estimators achieve optimal convergence rates (best possible accuracy) even with corrupted data, something previous methods couldn’t do. Additionally, the estimators are computationally efficient, working in polynomial time using the sum-of-squares convex hierarchy. They also show that relying on just bounded covariance assumptions is insufficient for robust regression in adversarial settings. Their approach balances robustness, accuracy, and computational complexity, making it suitable for high-dimensional data. Prior methods, while statistically sound, were often computationally intractable in these scenarios. The paper’s key contribution is a unified framework that handles various noise models and outperforms previous estimators. Ultimately, the work provides a significant advancement in robust statistics by achieving both theoretical and practical efficiency.
+
+\subsection{Our Results}
+
+\subsubsection{Model 1.1: Robust Regression Model}
+
+Let $\mathcal{D}$ be a distribution over $\mathbb{R}^d \times \mathbb{R}$ such that the marginal distribution over $\mathbb{R}^d$ is centered and has covariance $\Sigma^\ast$, and let
+\[
+\Theta^\ast = \arg\min_{\Theta} \mathbb{E}_{(x,y) \sim \mathcal{D}} \left[ (y - \langle \Theta, x \rangle)^2 \right]
+\]
+be the optimal hyperplane for $\mathcal{D}$. Let $\{(x^\ast_1, y^\ast_1), (x^\ast_2, y^\ast_2), \dots, (x^\ast_n, y^\ast_n)\}$ be $n$ i.i.d. random variables drawn from $\mathcal{D}$. Given $\epsilon > 0$, the robust regression model $\mathcal{R}_{\mathcal{D}} (\epsilon, \Sigma^\ast, \Theta^\ast)$ outputs a set of $n$ samples $\{(x_i, y_i)\}_{i \in [n]}$ such that for at least $(1 - \epsilon)n$ points, $x_i = x^\ast_i$ and $y_i = y^\ast_i$. The remaining $\epsilon n$ points are arbitrary and potentially adversarial with respect to the input and estimator.
+
+\subsubsection{Theorem 1.2: Bounded Covariance does not suffice (Theorem 6.3 informal)}
+
+For all $\epsilon > 0$, there exist two distributions $\mathcal{D}_1$, $\mathcal{D}_2$ over $\mathbb{R}^d \times \mathbb{R}$ such that
+\[
+d_{TV} (\mathcal{D}_1, \mathcal{D}_2) \leq \epsilon
+\]
+and the marginal distribution over the covariates has bounded covariance, denoted by $\Sigma_2 = \Theta(1)$, yet
+\[
+\Sigma^{1/2} (\Theta_1 - \Theta_2)^2 = \Omega(1),
+\]
+where $\Theta_1$ and $\Theta_2$ are the optimal hyperplanes for $\mathcal{D}_1$ and $\mathcal{D}_2$, respectively.
+
+
+
+
+\textbf{Definition 1.3} ($\mathcal{}{C,k}$-Hypercontractivity) A distribution \( D \)  over \( \{ -1, 1 \}^n \) is ($\mathcal{}{C,k}$)-hypercontractive for an even integer \( k \geq 2 \), [...]
+\begin{equation}
+r \in [k/2], \text{ for all } x \in \mathbb{R}^d,\hfill\break
+\mathbb{E}_{x\sim D} \Biggr[ \Biggl \langle   v,x - \mathbb{E}[x])^2 \Biggr \rangle \Biggr]\leqslant r^2
+\mathbb{E}_{x\sim D} \Biggr[ \Biggl \langle c_x - \mathbb{E}[x] \Biggr \rangle^2\Biggr]^{r}
+\end{equation}
+
+
+
+\textbf{Theorem 1.7 (Robust Regression with Negatively Correlated Noise, Theorem 5.1 informal).} 
+Given $\epsilon > 0$, $k \geq 4$, and $n \geq (d \log(d))^{O(k)}$ samples from $\mathcal{R}_\mathcal{D}(\epsilon, \Sigma^\ast, \Theta^\ast)$, such that $\mathcal{D}$ is $(c, k)$-certifiably hypercontractive and has negatively correlated moments, there exists an algorithm that runs in $n^{O(k)}$ time and outputs an estimator $\tilde{\Theta}$ such that with high probability,
+\[
+(\Sigma^\ast)^{1/2} \left\|\Theta^\ast - \tilde{\Theta} \right\|_2 \leq O \left( \epsilon^{1 - 1/k} \right) \text{err}_{\mathcal{D}}(\Theta^\ast)^{1/2}.
+\]
+
+and , \\
+
+\[
+\text{err}_{\mathcal{D}}(\tilde{\Theta}) \leq \left( 1 + O\left( \epsilon^{2 - 2/k} \right) \right) \text{err}_{\mathcal{D}}(\Theta^\ast).
+\]
+
+\textbf{Theorem 1.9 (Lower Bound for Independent Noise, Theorem 6.1 informal).} For any $\epsilon > 0$, there exist two distributions $\mathcal{D}_1$, $\mathcal{D}_2$ over $\mathbb{R}^2 \times \mathbb{R}$ such that the marginal distribution over $\mathbb{R}^2$ has covariance $\Sigma$ and is $(c, k)$-hypercontractive for both distributions, and yet
+\[
+(\Sigma)^{1/2} \left\| \Theta_1 - \Theta_2 \right\|_2^2 = \Omega \left( \epsilon^{1 - 1/k} \sigma \right),
+\]
+where $\Theta_1$ and $\Theta_2$ are the optimal hyperplanes for $\mathcal{D}_1$ and $\mathcal{D}_2$, respectively, $\sigma = \max \left( \text{err}_{\mathcal{D}_1}(\Theta_1), \text{err}_{\mathcal{D}_2}(\Theta_2) \right)$, and the noise is uniform over $[-\sigma, \sigma]$. Further,
+\[
+\left| \text{err}_{\mathcal{D}_1}(\Theta_2) - \text{err}_{\mathcal{D}_1}(\Theta_1) \right| = \Omega \left( \epsilon^{2 - 2/k} \sigma^2 \right).
+\]
+.
+
+\textbf{Corollary 1.10 (Robust Regression with Dependent Noise, Corollary 4.2 informal).} Given $\epsilon > 0$, $k \geq 4$, and $n \geq d^{O(k)}$ samples from $\mathcal{R}_\mathcal{D}(\epsilon, \Sigma^\ast, \Theta^\ast)$, such that $\mathcal{D}$ is $(c, k)$-certifiably hypercontractive, there exists an algorithm that runs in $n^{O(k)}$ time and outputs an estimator $\tilde{\Theta}$ such that with probability $9/10$,
+\[
+(\Sigma^\ast)^{1/2} \left\|\Theta^\ast - \tilde{\Theta} \right\|_2 \leq O \left( \epsilon^{1 - 2/k} \right) \text{err}_{\mathcal{D}}(\Theta^\ast)^{1/2},
+\]
+and
+\[
+\text{err}_{\mathcal{D}}(\tilde{\Theta}) \leq \left( 1 + O\left( \epsilon^{2 - 4/k} \right) \right) \text{err}_{\mathcal{D}}(\Theta^\ast).
+\]
+
+Further, we show that the dependence on $\epsilon$ is again information-theoretically optimal:
+
+\textbf{Theorem 1.11 (Lower Bound for Dependent Noise, Theorem 6.2 informal).} For any $\epsilon > 0$, there exist two distributions $\mathcal{D}_1$, $\mathcal{D}_2$ over $\mathbb{R}^2 \times \mathbb{R}$ such that the marginal distribution over $\mathbb{R}^2$ has covariance $\Sigma$ and is $(c, k)$-hypercontractive for both distributions, and yet
+\[
+(\Sigma)^{1/2} \left\| \Theta_1 - \Theta_2 \right\|_2^2 = \Omega \left( \epsilon^{1 - 2/k} \sigma \right),
+\]
+where $\Theta_1$ and $\Theta_2$ are the optimal hyperplanes for $\mathcal{D}_1$ and $\mathcal{D}_2$, respectively, and $\sigma = \max \left( \text{err}_{\mathcal{D}_1}(\Theta_1), \text{err}_{\mathcal{D}_2}(\Theta_2) \right)$. Further,
+\[
+\left| \text{err}_{\mathcal{D}_1}(\Theta_2) - \text{err}_{\mathcal{D}_1}(\Theta_1) \right| = \Omega \left( \epsilon^{2 - 4/k} \sigma^2 \right).
+\]
+
+\textbf{Corollary 1.12 (Robust Regression with Gaussian Covariates).} Given $\epsilon > 0$ and $n \geq (d \log(d))^{O(\log(1/\epsilon))}$ samples from $\mathcal{R}_{\mathcal{N}}(\epsilon, \Sigma^\ast, \Theta^\ast)$, such that the marginal distribution over the $x$'s is $\mathcal{N}(0, \Sigma^\ast)$, there exists an algorithm that runs in $n^{O(\log(1/\epsilon))}$ time and outputs an estimator $\tilde{\Theta}$ such that with high probability,
+\[
+(\Sigma^\ast)^{1/2} \left\| \Theta^\ast - \tilde{\Theta} \right\|_2 \leq O \left( \epsilon \log(1/\epsilon) \right) \text{err}_{\mathcal{N}}(\Theta^\ast)^{1/2},
+\]
+and
+\[
+\text{err}_{\mathcal{N}}(\tilde{\Theta}) \leq \left( 1 + O \left( \left( \epsilon \log(1/\epsilon) \right)^2 \right) \right) \text{err}_{\mathcal{N}}(\Theta^\ast).
+\]
+We note that our estimators obtain the rate matching recent work for Gaussians, albeit in quasi-polynomial time. In comparison, Diakonikolas, Kong, and Stewart [21] obtain the same rate in polynomial time, when the noise is independent of the covariates. We note that obtaining the optimal rate for Gaussian covariates (shaving the additional $\log(1/\epsilon)$ factor) remains an outstanding open question.
+
+\section*{\textbf{Table 1: Comparison of convergence rate (for least-squares
+error) achieved by various computationally efficient estima-
+tors for Robust Regression, when the underlying distribu-
+tion is $\mathcal{C_K,K} $-hypercontractive}}
+ 
+ %\begin{center}
+\begin{tabular}{| p{13em}| p{7em}| p{7em}| }
+\hline
+ \textbf{\small Estimator} & \textbf{\small Independent Noise}& \textbf{\small Arbitrary Noise} \\ 
+\hline
+ Prasad et al.\cite{prasad2018robust}\par\vspace{0.02cm}Diakonikolas et. al.\cite{weisberg2005applied} & $\epsilon \kappa^2$\par\vspace{0.02cm}\text{(only } $\substack{k = 4}$\text{)}  & $\epsilon \kappa^2$\par\vspace{0.02cm}\text{(only } $\substack{k = 4}$\text{)} \\  
+ \hline
+    Klivans, Kothari, and Meka \cite{nelder1972generalized} & \begin{center}$\epsilon^{1 - 2/k}$ \end{center} & \begin{center} $\epsilon^{1 - 2/k}$\end{center} \\  
+\hline
+Zhu,Jiao and Steinhardt\par\vspace{0.02cm}\cite{prasad2019unified} & \begin{center}$\epsilon^{2 - 4/k}$ \end{center} & \begin{center} $\epsilon^{2 - 4/k}$\end{center} \\  
+\hline
+Our Work \par\vspace{0.02cm}Thm 1.7, Cor 1.10 & \begin{center}$\epsilon^{2 - 2/k}$ \end{center} & \begin{center} $\epsilon^{2 - 4/k}$\end{center} \\  
+\hline
+Lower Bounds\par\vspace{0.02cm}Thm 1.9, Thm 1.11 & \begin{center}$\epsilon^{2 - 2/k}$ \end{center} & \begin{center} $\epsilon^{2 - 4/k}$\end{center} \\  
+\hline
+\end{tabular}
+
+\noindent
+\textbf{Over samples from $\mathcal{N}(0, \Sigma)$ are $(O(k), O(k))$-certifiably hypercontractive for all $k$ (see Section 5 in Kothari and Steurer [36]).} As a consequence, instantiating Corollary 1.10 with $k = \log(1/\epsilon)$ yields the following:
+
+\subsection{\textbf{Related Works}}
+
+Robust Statistics. Computationally efficient estimators for robust
+statistics in high dimension have been extensively studied, follow-
+ing the initial work on robust mean estimation [\cite{zhu2019generalized}, \cite{lecue2019robust} ]. We focus on
+literature regarding robust regression and sum-of-squares. We refer
+the reader to recent surveys and theses for an extensive discussion
+of the literature on robust statistics [\cite{wainwright2019high}, \cite{altschuler2018best}, \cite{hopkins2018sub}, \cite{vershynin2010introduction}].
+
+
+
+\section{Robust Certifiability and Information Theoretic Estimators}
+
+In this section, we provide an estimator that obtains the information theoretically optimal rate for robust regression. We note that we consider the setting where both the covariates and the noise are hypercontractive and are independent of each other. This setting displays all the key ideas of our estimator. Further, our estimator extends to the remaining settings, such as bounded dependent noise, by simple modifications to the subsequent analysis.
+
+\textbf{Theorem 4.1 (Robust Certifiability with Optimal Rate).} Given \(\epsilon > 0\), let \(D\) and \(D'\) be distributions over \(\mathbb{R}^d \times \mathbb{R}\) such that the respective marginal distributions over \(\mathbb{R}^d\), denoted by \(D_X\) and \(D'_X\), are \((c k, k)\)-hypercontractive and \(\|D - D'\|_{\text{TV}} \leq \epsilon\). Let \(R_D (\epsilon, \Sigma_D, \Theta_D)\) and \(R_{D'} (\epsilon, \Sigma_{D'}, \Theta_{D'})\) be the corresponding instances of robust regression such that \(D\) and \(D'\) have negatively correlated moments. Further, for \((x, y) \sim D, D'\), let the marginal distribution over \(y - x\), \(\mathbb{E}[x x^\top]^{-1} \mathbb{E}[x y]\), be \((\eta k, k)\)-hypercontractive. Then,
+\[
+\|\Sigma_D^{1/2} (\Theta_D - \Theta_{D'})\|_2^2 \leq O \left( \sqrt{c k \eta k \epsilon^{1 - 1/k}} \left( \text{err}_D (\Theta_D)^{1/2} + \text{err}_{D'} (\Theta_{D'})^{1/2} \right) \right).
+\]
+Further,
+\[
+\text{err}_D (\Theta_{D'}) \leq \left( 1 + O \left( c k \eta k \epsilon^{2 - 2/k} \right) \right) \text{err}_D (\Theta_D) + O \left( c k \eta k \epsilon^{2 - 2/k} \right) \text{err}_{D'} (\Theta_{D'}).
+\]
+
+\textbf{Proof.} Consider a maximal coupling of \(D\) and \(D'\) over \((x, y) \times (x', y')\), denoted by \(G\), such that the marginal of \(G\) on \((x, y)\) is \(D\), the marginal on \((x', y')\) is \(D'\), and \(P_G \left[ I \{ (x, y) = (x', y') \} \right] = 1 - \epsilon\). Then, for all \(v\),
+\[
+\langle v, \Sigma_D (\Theta_D - \Theta_{D'}) \rangle = \mathbb{E}_G \left[ \langle v, x x^\top (\Theta_D - \Theta_{D'}) + x y - x' y' \rangle \right]
+\]
+\[
+= \mathbb{E}_G \left[ \langle v, x (\langle x, \Theta_D \rangle - y) \rangle \right]
++ \mathbb{E}_G \left[ \langle v, x (y - \langle x, \Theta_{D'} \rangle) \rangle \right].
+\]
+Since \(\Theta_D\) is the minimizer for the least squares loss, we have the following gradient condition: for all \(v \in \mathbb{R}^d\),
+\[
+\mathbb{E}_{(x, y) \sim D} \left[ \langle v, (\langle x, \Theta_D \rangle - y) x \rangle \right] = 0.
+\]
+Since \(G\) is a coupling, using the gradient condition and that \(1 = I \{ (x, y) = (x', y') \} + I \{ (x, y) \ne (x', y') \}\), we can rewrite equation (12) as
+
+
+\begin{mdframed}
+  \noindent
+  \textbf{Algorithm: Optimal Robust Regression in Polynomial Time}\par
+  \hspace{2em}\textbf{Input:} $n$ samples $\mathcal{X}_{\epsilon}$ from the robust regression model \\
+     $\mathcal{R}_{\mathcal{D}}(\epsilon, \Theta^*, \Sigma^*)$.
+
+  \hspace{4em}\textbf{Operation:}\vspace{0.5em}\hspace{5em}
+  \begin{enumerate}
+   \item Find a degree-$\mathcal{O}(k)$ pseudo-distribution $\tilde{\zeta}$ satisfying \\
+   \quad  $\mathcal{A}_{\epsilon, \lambda_k}$ and minimizing
+    \[
+    \min_{w, x', y', \Theta} \mathbb{E}_{\tilde{\zeta}}\left[ \left( \frac{1}{n} \sum_{i \in [n]} w_i \left( y'_i - \langle \Theta, x'_i \rangle \right)^2 \right)^{k} \right].
+    \]
+    \item Round the pseudo-distribution to obtain an estimator $\mathbb{E}_{\tilde{\zeta}}[\Theta]$.
+  \end{enumerate}
+
+  \textbf{Output:} A vector $\mathbb{E}_{\tilde{\zeta}}[\Theta]$ such that the recovery guarantee in Theorem \cite{xu2013outlier} is satisfied.
+\end{mdframed}
+
+At a high level, we do not enforce the negatively correlated moments constraint in our polynomial system $\mathcal{A}_{\epsilon, \lambda_k}$ and instead use the SoS Cauchy-Schwarz inequality in our key technical lemma (Lemma \ref{lem:key_sos_lemma}). For completeness, we provide the proof of the SoS lemma in Appendix \ref{sec:arbitrary_noise_polytime}.
+
+
+\section*{Lower bounds}
+
+In this section, we present information-theoretic lower bounds on the rate of convergence of parameter estimation and least-squares error for robust regression. Our constructions proceed by demonstrating two distributions over regression instances that are $\epsilon$-close in total variation distance and the marginal distribution over the covariates is hypercontractive, yet the true hyperplanes are $f(\epsilon)$-far in scaled $\ell_2$ distance. 
+
+
+\subsection*{Agnostic Model}
+Next, consider the setting where we simply observe samples from $(x,y) \sim \calD$, and our goal is to return is to return the minimizer of the squared error, given by $\Theta^* = \expecf{}{x x^{\top}}^{-1}\expecf{}{xy}$. Here, the distribution of the noise is allowed to depend on the covariates arbitrarily. We further assume the noise is hypercontractive and obtain a lower bound proportional to $\epsilon^{1-2/k}$ for recovering an estimator close to $\Theta^*$. This matches the upper boundd obtained in Corollary \cite{liu2018high}. 
+
+
+\begin{definition}[Student's $t$-distribution]
+Given $\nu > 1$, Student's $t$-distribution has the following probability density function: 
+\begin{equation*}
+    f_{\nu}(t) = \frac{ \Gamma\Paren{\frac{\nu + 1}{2} } }{\sqrt{\nu \pi} \hspace{0.05in} \Gamma\Paren{\frac{\nu }{2} } } \Paren{1 + \frac{t^2}{\nu} }^{- \frac{\nu+1}{2}} 
+\end{equation*}
+where $\Gamma(z) = \int_{0}^\infty x^{z-1} e^x dx $, for $z\in\R$, is the Gamma function. 
+\end{definition}
+
+
+\printbibliography
+\end{document}
